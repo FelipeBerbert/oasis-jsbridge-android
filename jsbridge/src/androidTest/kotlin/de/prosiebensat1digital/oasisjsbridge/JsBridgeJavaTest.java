@@ -18,18 +18,12 @@ package de.prosiebensat1digital.oasisjsbridge;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import timber.log.Timber;
 
 import static org.junit.Assert.assertEquals;
 
 // Minimal test for using JsBridge from Java
 public final class JsBridgeJavaTest {
     private JsBridge jsBridge;
-
-    @BeforeClass
-    static public void setUpClass() {
-        Timber.plant(new Timber.DebugTree());
-    }
 
     @After
     public void cleanUp() {

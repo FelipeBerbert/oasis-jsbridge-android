@@ -20,20 +20,10 @@ import kotlin.test.assertEquals
 import kotlinx.coroutines.*
 import org.junit.After
 import org.junit.Before
-import org.junit.BeforeClass
 import org.junit.Test
-import timber.log.Timber
 
 class ReadmeTest {
     private lateinit var jsBridge: JsBridge
-
-    companion object {
-        @BeforeClass
-        @JvmStatic
-        fun setUpClass() {
-            Timber.plant(Timber.DebugTree())
-        }
-    }
 
     @Before
     fun setUp() {

@@ -18,14 +18,13 @@
  */
 package de.prosiebensat1digital.oasisjsbridge
 
-import timber.log.Timber
 
 @Suppress("UNUSED")  // Called from JNI
 class JsException(val jsonValue: String? = null, detailedMessage: String, jsStackTrace: String?, cause: Throwable?) : RuntimeException(detailedMessage, cause) {
 
     init {
-        Timber.v("JsException() - detailedMessage = $detailedMessage")
-        Timber.v("JsException() - jsStackTrace = $jsStackTrace")
+        Logger.v("JsException() - detailedMessage = $detailedMessage")
+        Logger.v("JsException() - jsStackTrace = $jsStackTrace")
 
         // Parses `StackTraceElement`s from `jsStackTrace` and prepend them to the Java stack trace
         stackTrace = jsStackTrace.orEmpty().split('\n')

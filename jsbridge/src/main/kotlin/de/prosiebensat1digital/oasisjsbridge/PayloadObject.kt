@@ -17,7 +17,6 @@ package de.prosiebensat1digital.oasisjsbridge
 
 import org.json.JSONObject
 import org.json.JSONTokener
-import timber.log.Timber
 import java.util.*
 import kotlin.collections.HashSet
 import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
@@ -78,7 +77,7 @@ class PayloadObject: Payload {
                 if (BuildConfig.DEBUG) {
                     throw e
                 }
-                Timber.w("WARNING: invalid JSON: $jsonString")
+                Logger.w("WARNING: invalid JSON: $jsonString")
                 null
             }
         }

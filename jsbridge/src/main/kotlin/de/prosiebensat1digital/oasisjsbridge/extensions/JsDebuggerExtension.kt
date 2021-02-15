@@ -23,7 +23,6 @@ import android.net.wifi.WifiManager
 import de.prosiebensat1digital.oasisjsbridge.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.lang.ref.WeakReference
 import java.math.BigInteger
 import java.net.InetAddress
@@ -70,12 +69,12 @@ internal class JsDebuggerExtension(
     }
 
     internal fun onDebuggerPending() {
-        Timber.v("onDebuggerPending")
+        Logger.v("onDebuggerPending")
 
         val activity = this.activityRef.get() ?: return
 
         jsBridge.launch(Dispatchers.Main) {
-            Timber.v("onDebuggerPending - launch")
+            Logger.v("onDebuggerPending - launch")
 
             val builder = AlertDialog.Builder(activity)
 
@@ -99,13 +98,13 @@ internal class JsDebuggerExtension(
             """.trimMargin())
                 .setTitle("Waiting for debugger")
                 .setNegativeButton("Stop debugging") { _, _ ->
-                    Timber.i("Cancelling debugging...")
+                    Logger.i("Cancelling debugging...")
                     jsBridge.cancelDebug()
                     debuggerDialog?.cancel()
                     debuggerDialog = null
                 }
 
-            Timber.v("onDebuggerPending - show dialog")
+            Logger.v("onDebuggerPending - show dialog")
             debuggerDialog = builder.create()
             debuggerDialog?.show()
         }

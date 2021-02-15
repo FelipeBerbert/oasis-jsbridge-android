@@ -18,7 +18,6 @@ package de.prosiebensat1digital.oasisjsbridge
 import org.json.JSONArray
 import org.json.JSONObject
 import org.json.JSONTokener
-import timber.log.Timber
 
 interface Payload {
     companion object {
@@ -39,7 +38,7 @@ interface Payload {
                     else -> null
                 }
             } catch (e: Exception) {
-                Timber.w("WARNING: invalid JSON: $jsonString")
+                Logger.w("WARNING: invalid JSON: $jsonString")
                 if (BuildConfig.DEBUG) {
                     throw e
                 }
@@ -114,7 +113,7 @@ internal fun jsonValueToPayloadValue(jsonValue: Any?): Any? = when (jsonValue) {
     is JSONObject -> PayloadObject.fromJsonObject(jsonValue)
     is JSONArray -> PayloadArray.fromJsonArray(jsonValue)
     else -> {
-        Timber.w("WARNING: unsupported JSONObject value: $jsonValue!")
+        Logger.w("WARNING: unsupported JSONObject value: $jsonValue!")
         null
     }
 }

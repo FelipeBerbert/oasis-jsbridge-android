@@ -18,13 +18,24 @@ package de.prosiebensat1digital.oasisjsbridge
 import android.content.Context
 import android.util.Log
 import androidx.test.platform.app.InstrumentationRegistry
-import de.prosiebensat1digital.oasisjsbridge.JsBridgeError.*
+import de.prosiebensat1digital.oasisjsbridge.JsBridgeError.JsFileEvaluationError
+import de.prosiebensat1digital.oasisjsbridge.JsBridgeError.JsStringEvaluationError
+import de.prosiebensat1digital.oasisjsbridge.JsBridgeError.UnhandledJsPromiseError
 import io.mockk.Ordering
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlin.test.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.yield
 import okhttp3.OkHttpClient
 import org.junit.After
 import org.junit.Before
@@ -32,7 +43,16 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.fail
-import timber.log.Timber
+import org.junit.Before
+import org.junit.BeforeClass
+import org.junit.Ignore
+import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 interface TestNativeApiInterface : JsToNativeInterface {
     fun nativeMethodReturningTrue(): Boolean
@@ -92,7 +112,15 @@ class JsBridgeTest {
         @BeforeClass
         @JvmStatic
         fun setUpClass() {
-            Timber.plant(Timber.DebugTree())
+            Logger.logger = object : LoggerInterface {
+                override fun v(message: String) { Log.i("JsBridgeTest", message) }
+                override fun e(throwable: Throwable) { Log.e("JsBridgeTest", Log.getStackTraceString(throwable)) }
+                override fun e(message: String) { Log.e("JsBridgeTest", message) }
+                override fun d(message: String) { Log.d("JsBridgeTest", message) }
+                override fun w(message: String) { Log.w("JsBridgeTest", message) }
+                override fun w(throwable: Throwable) { Log.w("JsBridgeTest", throwable) }
+                override fun i(message: String) {Log.i("JsBridgeTest", message)}
+            }
         }
     }
 
@@ -858,45 +886,46 @@ class JsBridgeTest {
             |""".trimMargin()
         ).mapToNativeFunction0()
 
+        println("duh")
         runBlocking {
             delay(500)
 
-            Timber.i("Executing calcMagicNativeFunc()...")
+            Logger.i("Executing calcMagicNativeFunc()...")
             val expectedResult = calcMagicNativeFunc()
-            Timber.i("-> result is $expectedResult")
+            Logger.i("-> result is $expectedResult")
 
-            Timber.i("Executing calcMagicJsFunc()...")
+            Logger.i("Executing calcMagicJsFunc()...")
             var result = calcMagicJsFunc()
-            Timber.i("-> result is $result")
+            Logger.i("-> result is $result")
             assertEquals(expectedResult, result)
 
-            Timber.i("Executing calcMagicCallJsFunctionInsideNativeLoop()...")
+            Logger.i("Executing calcMagicCallJsFunctionInsideNativeLoop()...")
             result = calcMagicCallJsFunctionInsideNativeLoop()
-            Timber.i("-> result is $result")
+            Logger.i("-> result is $result")
             assertEquals(expectedResult, result)
 
-            Timber.i("Executing calcMagicCallJsFunctionInsideNativeLoop() in JS thread...")
+            Logger.i("Executing calcMagicCallJsFunctionInsideNativeLoop() in JS thread...")
             withContext(subject.coroutineContext) {
                 result = calcMagicCallJsFunctionInsideNativeLoop()
-                Timber.i("-> result is $result")
+                Logger.i("-> result is $result")
                 assertEquals(expectedResult, result)
             }
 
-            Timber.i("Executing calcMagicEvaluateJsInsideNativeLoop()...")
+            Logger.i("Executing calcMagicEvaluateJsInsideNativeLoop()...")
             result = calcMagicEvaluateJsInsideNativeLoop()
-            Timber.i("-> result is $result")
+            Logger.i("-> result is $result")
             assertEquals(expectedResult, result)
 
-            Timber.i("Executing calcMagicEvaluateJsInsideNativeLoop() in JS thread...")
+            Logger.i("Executing calcMagicEvaluateJsInsideNativeLoop() in JS thread...")
             withContext(subject.coroutineContext) {
                 result = calcMagicEvaluateJsInsideNativeLoop()
-                Timber.i("-> result is $result")
+                Logger.i("-> result is $result")
                 assertEquals(expectedResult, result)
             }
 
-            Timber.i("Executing calcMagicCallNativeFunctionInsideJsLoop()...")
+            Logger.i("Executing calcMagicCallNativeFunctionInsideJsLoop()...")
             result = calcMagicCallNativeFunctionInsideJsLoop()
-            Timber.i("-> result is $result")
+            Logger.i("-> result is $result")
             assertEquals(expectedResult, result)
 
             // Make sure that the JS value does not create garbage-collected as calcMagicMixed3Func()
@@ -921,7 +950,7 @@ class JsBridgeTest {
     @Ignore("Very long test")
     fun stressTest() {
         for (i in 0..10000) {
-            Timber.i("stressTest() - JsBridge instance ${i + 1}")
+            Logger.i("stressTest() - JsBridge instance ${i + 1}")
             stressTestHelper()
         }
     }
@@ -2506,18 +2535,18 @@ class JsBridgeTest {
     @Suppress("UNUSED")  // Only for debugging
     private fun printErrors() {
         if (errors.isNotEmpty()) {
-            Timber.e("JsBridge errors:")
+            Logger.e("JsBridge errors:")
             errors.forEachIndexed { index, error ->
-                Timber.e("Error ${index + 1}/${errors.count()}:\n")
-                Timber.e(error)
+                Logger.e("Error ${index + 1}/${errors.count()}:\n")
+                Logger.e(error)
             }
         }
 
         if (unhandledPromiseErrors.isNotEmpty()) {
-            Timber.w("JsBridge unhandled Promise errors:")
+            Logger.w("JsBridge unhandled Promise errors:")
             unhandledPromiseErrors.forEachIndexed { index, error ->
-                Timber.w("Unhandled Promise error ${index + 1}/${unhandledPromiseErrors.count()}:\n")
-                Timber.w(error)
+                Logger.w("Unhandled Promise error ${index + 1}/${unhandledPromiseErrors.count()}:\n")
+                Logger.w(error)
             }
         }
     }

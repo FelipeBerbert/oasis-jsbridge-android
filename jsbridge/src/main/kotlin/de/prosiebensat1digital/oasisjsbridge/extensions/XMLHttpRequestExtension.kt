@@ -25,7 +25,6 @@ import okhttp3.*
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
-import timber.log.Timber
 
 internal class XMLHttpRequestExtension(
     private val jsBridge: JsBridge,
@@ -53,7 +52,7 @@ internal class XMLHttpRequestExtension(
         data: String?,
         cb: (JsonObjectWrapper, String, String) -> Unit
     ) {
-        Timber.v("nativeSend($httpMethod, $url, $headers)")
+        Logger.v("nativeSend($httpMethod, $url, $headers)")
 
         jsBridge.launch(Dispatchers.IO) {
             // Load URL and evaluate JS string
@@ -79,7 +78,7 @@ internal class XMLHttpRequestExtension(
                         if (key != null && value != null) {
                             requestHeadersBuilder.add(key, value)
                         } else {
-                            Timber.w("Invalid header keyValue: $keyValue")
+                            Logger.w("Invalid header keyValue: $keyValue")
                         }
                     }
                 }
@@ -105,7 +104,7 @@ internal class XMLHttpRequestExtension(
                     }
                 }
 
-                Timber.d("Performing XHR request (query: $url)...")
+                Logger.d("Performing XHR request (query: $url)...")
 
                 // Send request via OkHttp
                 lateinit var request: Request
@@ -138,14 +137,14 @@ internal class XMLHttpRequestExtension(
                 )
                 responseText = response.body?.string()
 
-                Timber.d("Successfully fetched XHR response (query: $url)")
-                Timber.v("-> responseInfo = $responseInfo")
-                Timber.v("-> request headers = $requestHeaders")
+                Logger.d("Successfully fetched XHR response (query: $url)")
+                Logger.v("-> responseInfo = $responseInfo")
+                Logger.v("-> request headers = $requestHeaders")
             } catch (e: SocketTimeoutException) {
-                Timber.d("XHR timeout ($httpMethod $url): $e")
+                Logger.d("XHR timeout ($httpMethod $url): $e")
                 errorString = "timeout"
             } catch (t: Throwable) {
-                Timber.d("XHR error ($httpMethod $url): $t")
+                Logger.d("XHR error ($httpMethod $url): $t")
                 errorString = t.message ?: "unknown XHR error"
             }
 

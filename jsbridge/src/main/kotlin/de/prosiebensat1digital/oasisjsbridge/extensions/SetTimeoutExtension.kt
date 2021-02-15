@@ -18,7 +18,6 @@ package de.prosiebensat1digital.oasisjsbridge.extensions
 import de.prosiebensat1digital.oasisjsbridge.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 // Support for setTimeout() and setInterval()
 internal class SetTimeoutExtension(private val jsBridge: JsBridge) {
@@ -82,7 +81,7 @@ internal class SetTimeoutExtension(private val jsBridge: JsBridge) {
                 delay(msecs)
 
                 if (!activeTimers.contains(id)) {
-                    Timber.d("setTimeoutHelper($msecs, $repeat) - id = $id - callback not executed because the timeout was cancelled!")
+                    Logger.d("setTimeoutHelper($msecs, $repeat) - id = $id - callback not executed because the timeout was cancelled!")
                     return@launch
                 }
                 if (!repeat) {
@@ -92,7 +91,7 @@ internal class SetTimeoutExtension(private val jsBridge: JsBridge) {
                     cb()
                     jsBridge.processPromiseQueue()
                 } catch (t: Throwable) {
-                    Timber.e("Error while calling setTimeout JS callback: $t")
+                    Logger.e("Error while calling setTimeout JS callback: $t")
                     jsBridge.notifyErrorListeners(JsBridgeError.JsCallbackError(t))
                 }
             } while (repeat)

@@ -38,7 +38,6 @@ import kotlin.reflect.*
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.declaredMemberFunctions
 import kotlinx.coroutines.*
-import timber.log.Timber
 
 
 // Execute JS code via Duktape or QuickJS and handle the bi-directional communication between native
@@ -106,7 +105,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
         }
 
         startReleaseLock.withLock {
-            Timber.d("Starting JsBridge")
+            Logger.d("Starting JsBridge")
 
             // Pending -> AboutToStart
             if (!state.compareAndSet(State.Pending.intValue, State.AboutToStart.intValue)) {
@@ -136,7 +135,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
                 }
 
                 if (state.compareAndSet(State.Starting.intValue, State.Started.intValue)) {
-                    Timber.d("JsBridge successfully started!")
+                    Logger.d("JsBridge successfully started!")
                 }
             }
 
@@ -173,7 +172,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
     // - Clean up resources
     fun release(): Unit = startReleaseLock.withLock {
         if (state.get() == State.Releasing.intValue || state.get() == State.Released.intValue) {
-            Timber.w("JsBridge is already in state $currentState and does not need to be released again!")
+            Logger.w("JsBridge is already in state $currentState and does not need to be released again!")
             return
         }
 
@@ -222,7 +221,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
 
             // Releasing -> Released
             if (!state.compareAndSet(State.Releasing.intValue, State.Released.intValue)) {
-                Timber.w("Unexpected state after releasing JsBridge: $currentState}")
+                Logger.w("Unexpected state after releasing JsBridge: $currentState}")
             }
         }
     }
@@ -237,7 +236,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
 
     fun startDebugger(activity: Activity? = null) {
         val jsDebuggerExtension = jsDebuggerExtension ?: run {
-            Timber.w("Cannot start JS debugger: Please enable it in JsBridgeConfig.jsDebuggerConfig.")
+            Logger.w("Cannot start JS debugger: Please enable it in JsBridgeConfig.jsDebuggerConfig.")
             return
         }
 
@@ -260,7 +259,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
                 val (inputStream, jsFileName) = getInputStream(context, filename, useMaxJs)
                 val jsString = inputStream.bufferedReader().use { it.readText() }
                 jniEvaluateFileContent(jniJsContext, jsString, jsFileName)
-                Timber.d("-> $filename ($jsFileName) has been successfully evaluated!")
+                Logger.d("-> $filename ($jsFileName) has been successfully evaluated!")
             } catch (t: Throwable) {
                 throw JsFileEvaluationError(filename, t)
                     .also(::notifyErrorListeners)
@@ -277,7 +276,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
 
             try {
                 jniEvaluateFileContent(jniJsContext, content, filename)
-                Timber.d("-> file content ($filename) has been successfully evaluated!")
+                Logger.d("-> file content ($filename) has been successfully evaluated!")
             } catch (t: Throwable) {
                 throw JsFileEvaluationError(filename, t)
                     .also(::notifyErrorListeners)
@@ -294,7 +293,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
 
             // Only for debug printing purposes:
             //val shortJs = if (js.length <= 500) js else js.take(500) + "..."
-            //Timber.v("evaluateNoRetVal(\"$shortJs\")")
+            //Logger.v("evaluateNoRetVal(\"$shortJs\")")
 
             try {
                 jniEvaluateString(jniJsContext, js, null, false)
@@ -325,7 +324,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
     inline fun <reified T: Any?> evaluateBlocking(js: String, context: CoroutineContext = EmptyCoroutineContext): T {
         return runBlocking(context) {
             if (isMainThread()) {
-                Timber.w("WARNING: evaluating JS code in the main thread! Consider using non-blocking API or evaluating JS code in another thread!")
+                Logger.w("WARNING: evaluating JS code in the main thread! Consider using non-blocking API or evaluating JS code in another thread!")
             }
             evaluate(js, typeOf<T>(), true)
         }
@@ -337,7 +336,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
     fun evaluateBlocking(js: String, javaClass: Class<*>?): Any? {
         return runBlocking {
             if (isMainThread()) {
-                Timber.w("WARNING: evaluating JS code in the main thread! Consider using non-blocking API or evaluating JS code in another thread!")
+                Logger.w("WARNING: evaluating JS code in the main thread! Consider using non-blocking API or evaluating JS code in another thread!")
             }
             evaluate<Any?>(js, javaClass?.kotlin?.createType(), false)
         }
@@ -359,7 +358,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
 
             // Only for debug printing purposes:
             //val shortJs = if (js.length <= 500) js else js.take(500) + "..."
-            //Timber.v("evaluate(\"$shortJs\")")
+            //Logger.v("evaluate(\"$shortJs\")")
 
             // Exceptions must be directly caught by the caller
             var ret = jniEvaluateString(jniJsContext, js, parameter, doAwaitJsPromise)
@@ -507,7 +506,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
             jsValue.codeEvaluationDeferred?.await()
             jniCopyJsValue(jniJsContext, lambdaJsValue.associatedJsName, jsValue.associatedJsName)
             jniRegisterJsLambda(jniJsContext, lambdaJsValue.associatedJsName, method)
-            Timber.v("Registered JS lambda ${lambdaJsValue.associatedJsName}")
+            Logger.v("Registered JS lambda ${lambdaJsValue.associatedJsName}")
             lambdaJsValue.hold()
         }
 
@@ -584,7 +583,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
             } catch (e: JsToNativeRegistrationError) {
                 throw e
             } catch (t: Throwable) {
-                Timber.e(t)
+                Logger.e(t)
                 throw JsToNativeRegistrationError(func::class, t)
             }
         }
@@ -653,7 +652,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
     // Notify all registered error listeners
     internal fun notifyErrorListeners(t: Throwable) {
         val e = t as? JsBridgeError ?: InternalError(t)
-        //Timber.e("JsBridgeError: $e")
+        //Logger.e("JsBridgeError: $e")
 
         errorListeners.forEach { errorListener ->
             launch(errorListener.coroutineContext ?: EmptyCoroutineContext) {
@@ -673,9 +672,9 @@ constructor(config: JsBridgeConfig): CoroutineScope {
 
         if (!isLibraryLoaded) {
             try {
-                Timber.d("Loading ${BuildConfig.JNI_LIB_NAME}...")
+                Logger.d("Loading ${BuildConfig.JNI_LIB_NAME}...")
                 System.loadLibrary(BuildConfig.JNI_LIB_NAME)
-                Timber.d("${BuildConfig.JNI_LIB_NAME} successfully loaded!")
+                Logger.d("${BuildConfig.JNI_LIB_NAME} successfully loaded!")
             } catch (t: Throwable) {
                 val e = InternalError(
                     Throwable("Cannot load ${BuildConfig.JNI_LIB_NAME} JNI library!", t)
@@ -698,16 +697,16 @@ constructor(config: JsBridgeConfig): CoroutineScope {
         if (useMaxJs) {
             try {
                 val maxFilename = filename.replace("""\.js$""".toRegex(), ".max.js")
-                Timber.v("Checking availability of $maxFilename...")
+                Logger.v("Checking availability of $maxFilename...")
                 val ret = context.assets.open(maxFilename)
-                Timber.d("$maxFilename found and will be used instead of $filename")
+                Logger.d("$maxFilename found and will be used instead of $filename")
                 return Pair(ret, maxFilename.substringAfterLast("/"))
             } catch (e: FileNotFoundException) {
                 // Ignore error
             }
         }
 
-        Timber.d("Reading $filename...")
+        Logger.d("Reading $filename...")
         return Pair(context.assets.open(filename), filename.substringAfterLast("/"))
     }
 
@@ -740,7 +739,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
         } catch (t: Throwable) {
             // Fallback to Java reflection. This is unfortunately still needed (latest check: 1.3.40)
             // because Kotlin throws an exception when reflecting lambdas (function objects)
-            Timber.w("Cannot reflect object of type $type (exception: $t) using Kotlin reflection! Falling back to Java reflection...")
+            Logger.w("Cannot reflect object of type $type (exception: $t) using Kotlin reflection! Falling back to Java reflection...")
 
             for (javaMethod in type.java.methods) {
                 val method = Method(javaMethod)
@@ -840,7 +839,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
 
         @Suppress("UNCHECKED_CAST")
         val proxy = Proxy.newProxyInstance(type.java.classLoader, arrayOf(type.java), proxyListener) as T
-        Timber.v("Created proxy instance for ${type.java.name}, js value name: $jsValue")
+        Logger.v("Created proxy instance for ${type.java.name}, js value name: $jsValue")
 
         return proxy
     }
@@ -968,7 +967,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
         if (!BuildConfig.DEBUG) return
 
         if (!isJsThread()) {
-            Timber.e("checkJsThread() - FAILED!")
+            Logger.e("checkJsThread() - FAILED!")
             throw InternalError(Throwable("Unexpected call: should be in the JsThread but is in ${Thread.currentThread().name}"))
                 .also(::notifyErrorListeners)
         }
@@ -1046,7 +1045,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
         private fun callJsMethodWithoutRetVal(method: JavaMethod, args: Array<Any?>?) {
             runInJsThread {
                 try {
-                    Timber.v("Calling (void) JS method ${type.canonicalName}/$jsValue.${method.name}...")
+                    Logger.v("Calling (void) JS method ${type.canonicalName}/$jsValue.${method.name}...")
                     callJsMethod(jsValue.associatedJsName, method, args ?: arrayOf(), false)
                 } catch (t: Throwable) {
                     throw NativeToJsCallError("${type.canonicalName}/$jsValue.${method.name}", t)
@@ -1058,7 +1057,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
         private fun callJsMethodSuspended(method: JavaMethod, args: Array<Any?>, continuation: Continuation<Any?>): Any {
             launch {
                 val retVal = try {
-                    Timber.v("Calling (suspend) JS method ${type.canonicalName}/$jsValue.${method.name}...")
+                    Logger.v("Calling (suspend) JS method ${type.canonicalName}/$jsValue.${method.name}...")
                     callJsMethod(jsValue.associatedJsName, method, args, true)
                 } catch (t: Throwable) {
                     // Throw JS exception (which must be directly caught by the caller)
@@ -1087,7 +1086,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
 
             launch {
                 val retVal = try {
-                    Timber.v("Calling (deferred) JS method ${type.canonicalName}/$jsValue.${method.name}...")
+                    Logger.v("Calling (deferred) JS method ${type.canonicalName}/$jsValue.${method.name}...")
                     callJsMethod(jsValue.associatedJsName, method, args ?: arrayOf(), false)
                 } catch (t: Throwable) {
                     // Reject the deferred with the JS exception (which must be directly caught by the caller)
@@ -1112,9 +1111,9 @@ constructor(config: JsBridgeConfig): CoroutineScope {
 
         private fun callJsMethodBlocking(method: JavaMethod, args: Array<Any?>?): Any? {
             if (isMainThread()) {
-                Timber.w("WARNING: executing JS method ${type.canonicalName}/$jsValue.${method.name} in the main thread! Consider using a Deferred or calling the method in another thread!")
+                Logger.w("WARNING: executing JS method ${type.canonicalName}/$jsValue.${method.name} in the main thread! Consider using a Deferred or calling the method in another thread!")
             } else {
-                Timber.v("Calling (blocking) JS method ${type.canonicalName}/$jsValue.${method.name}...")
+                Logger.v("Calling (blocking) JS method ${type.canonicalName}/$jsValue.${method.name}...")
             }
 
             return runBlocking(coroutineContext) {
