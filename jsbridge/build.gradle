@@ -112,7 +112,6 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$versions.kotlin.coroutines"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$versions.kotlin.coroutines"
 
-    implementation "com.jakewharton.timber:timber:$versions.timber"
     implementation "com.squareup.okhttp3:okhttp:$versions.okhttp"
 
     implementation "androidx.annotation:annotation:$versions.androidx.annotation"

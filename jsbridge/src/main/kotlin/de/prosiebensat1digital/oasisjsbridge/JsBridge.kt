@@ -105,7 +105,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
         }
 
         startReleaseLock.withLock {
-            Logger.d("Starting JsBridge")
+            Logger.d(message = "Starting JsBridge")
 
             // Pending -> AboutToStart
             if (!state.compareAndSet(State.Pending.intValue, State.AboutToStart.intValue)) {
@@ -135,7 +135,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
                 }
 
                 if (state.compareAndSet(State.Starting.intValue, State.Started.intValue)) {
-                    Logger.d("JsBridge successfully started!")
+                    Logger.d(message = "JsBridge successfully started!")
                 }
             }
 
@@ -172,7 +172,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
     // - Clean up resources
     fun release(): Unit = startReleaseLock.withLock {
         if (state.get() == State.Releasing.intValue || state.get() == State.Released.intValue) {
-            Logger.w("JsBridge is already in state $currentState and does not need to be released again!")
+            Logger.w(message = "JsBridge is already in state $currentState and does not need to be released again!")
             return
         }
 
@@ -221,7 +221,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
 
             // Releasing -> Released
             if (!state.compareAndSet(State.Releasing.intValue, State.Released.intValue)) {
-                Logger.w("Unexpected state after releasing JsBridge: $currentState}")
+                Logger.w(message = "Unexpected state after releasing JsBridge: $currentState}")
             }
         }
     }
@@ -236,7 +236,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
 
     fun startDebugger(activity: Activity? = null) {
         val jsDebuggerExtension = jsDebuggerExtension ?: run {
-            Logger.w("Cannot start JS debugger: Please enable it in JsBridgeConfig.jsDebuggerConfig.")
+            Logger.w(message = "Cannot start JS debugger: Please enable it in JsBridgeConfig.jsDebuggerConfig.")
             return
         }
 
@@ -259,7 +259,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
                 val (inputStream, jsFileName) = getInputStream(context, filename, useMaxJs)
                 val jsString = inputStream.bufferedReader().use { it.readText() }
                 jniEvaluateFileContent(jniJsContext, jsString, jsFileName)
-                Logger.d("-> $filename ($jsFileName) has been successfully evaluated!")
+                Logger.d(message = "-> $filename ($jsFileName) has been successfully evaluated!")
             } catch (t: Throwable) {
                 throw JsFileEvaluationError(filename, t)
                     .also(::notifyErrorListeners)
@@ -276,7 +276,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
 
             try {
                 jniEvaluateFileContent(jniJsContext, content, filename)
-                Logger.d("-> file content ($filename) has been successfully evaluated!")
+                Logger.d(message = "-> file content ($filename) has been successfully evaluated!")
             } catch (t: Throwable) {
                 throw JsFileEvaluationError(filename, t)
                     .also(::notifyErrorListeners)
@@ -293,7 +293,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
 
             // Only for debug printing purposes:
             //val shortJs = if (js.length <= 500) js else js.take(500) + "..."
-            //Logger.v("evaluateNoRetVal(\"$shortJs\")")
+            //Logger.v(message = "evaluateNoRetVal(\"$shortJs\")")
 
             try {
                 jniEvaluateString(jniJsContext, js, null, false)
@@ -324,7 +324,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
     inline fun <reified T: Any?> evaluateBlocking(js: String, context: CoroutineContext = EmptyCoroutineContext): T {
         return runBlocking(context) {
             if (isMainThread()) {
-                Logger.w("WARNING: evaluating JS code in the main thread! Consider using non-blocking API or evaluating JS code in another thread!")
+                Logger.w(message = "WARNING: evaluating JS code in the main thread! Consider using non-blocking API or evaluating JS code in another thread!")
             }
             evaluate(js, typeOf<T>(), true)
         }
@@ -336,7 +336,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
     fun evaluateBlocking(js: String, javaClass: Class<*>?): Any? {
         return runBlocking {
             if (isMainThread()) {
-                Logger.w("WARNING: evaluating JS code in the main thread! Consider using non-blocking API or evaluating JS code in another thread!")
+                Logger.w(message = "WARNING: evaluating JS code in the main thread! Consider using non-blocking API or evaluating JS code in another thread!")
             }
             evaluate<Any?>(js, javaClass?.kotlin?.createType(), false)
         }
@@ -358,7 +358,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
 
             // Only for debug printing purposes:
             //val shortJs = if (js.length <= 500) js else js.take(500) + "..."
-            //Logger.v("evaluate(\"$shortJs\")")
+            //Logger.v(message = "evaluate(\"$shortJs\")")
 
             // Exceptions must be directly caught by the caller
             var ret = jniEvaluateString(jniJsContext, js, parameter, doAwaitJsPromise)
@@ -506,7 +506,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
             jsValue.codeEvaluationDeferred?.await()
             jniCopyJsValue(jniJsContext, lambdaJsValue.associatedJsName, jsValue.associatedJsName)
             jniRegisterJsLambda(jniJsContext, lambdaJsValue.associatedJsName, method)
-            Logger.v("Registered JS lambda ${lambdaJsValue.associatedJsName}")
+            Logger.v(message = "Registered JS lambda ${lambdaJsValue.associatedJsName}")
             lambdaJsValue.hold()
         }
 
@@ -583,7 +583,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
             } catch (e: JsToNativeRegistrationError) {
                 throw e
             } catch (t: Throwable) {
-                Logger.e(t)
+                Logger.e(throwable = t)
                 throw JsToNativeRegistrationError(func::class, t)
             }
         }
@@ -652,7 +652,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
     // Notify all registered error listeners
     internal fun notifyErrorListeners(t: Throwable) {
         val e = t as? JsBridgeError ?: InternalError(t)
-        //Logger.e("JsBridgeError: $e")
+        //Logger.e(message = "JsBridgeError: $e")
 
         errorListeners.forEach { errorListener ->
             launch(errorListener.coroutineContext ?: EmptyCoroutineContext) {
@@ -672,9 +672,9 @@ constructor(config: JsBridgeConfig): CoroutineScope {
 
         if (!isLibraryLoaded) {
             try {
-                Logger.d("Loading ${BuildConfig.JNI_LIB_NAME}...")
+                Logger.d(message = "Loading ${BuildConfig.JNI_LIB_NAME}...")
                 System.loadLibrary(BuildConfig.JNI_LIB_NAME)
-                Logger.d("${BuildConfig.JNI_LIB_NAME} successfully loaded!")
+                Logger.d(message = "${BuildConfig.JNI_LIB_NAME} successfully loaded!")
             } catch (t: Throwable) {
                 val e = InternalError(
                     Throwable("Cannot load ${BuildConfig.JNI_LIB_NAME} JNI library!", t)
@@ -697,16 +697,16 @@ constructor(config: JsBridgeConfig): CoroutineScope {
         if (useMaxJs) {
             try {
                 val maxFilename = filename.replace("""\.js$""".toRegex(), ".max.js")
-                Logger.v("Checking availability of $maxFilename...")
+                Logger.v(message = "Checking availability of $maxFilename...")
                 val ret = context.assets.open(maxFilename)
-                Logger.d("$maxFilename found and will be used instead of $filename")
+                Logger.d(message = "$maxFilename found and will be used instead of $filename")
                 return Pair(ret, maxFilename.substringAfterLast("/"))
             } catch (e: FileNotFoundException) {
                 // Ignore error
             }
         }
 
-        Logger.d("Reading $filename...")
+        Logger.d(message = "Reading $filename...")
         return Pair(context.assets.open(filename), filename.substringAfterLast("/"))
     }
 
@@ -739,7 +739,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
         } catch (t: Throwable) {
             // Fallback to Java reflection. This is unfortunately still needed (latest check: 1.3.40)
             // because Kotlin throws an exception when reflecting lambdas (function objects)
-            Logger.w("Cannot reflect object of type $type (exception: $t) using Kotlin reflection! Falling back to Java reflection...")
+            Logger.w(message = "Cannot reflect object of type $type (exception: $t) using Kotlin reflection! Falling back to Java reflection...")
 
             for (javaMethod in type.java.methods) {
                 val method = Method(javaMethod)
@@ -839,7 +839,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
 
         @Suppress("UNCHECKED_CAST")
         val proxy = Proxy.newProxyInstance(type.java.classLoader, arrayOf(type.java), proxyListener) as T
-        Logger.v("Created proxy instance for ${type.java.name}, js value name: $jsValue")
+        Logger.v(message = "Created proxy instance for ${type.java.name}, js value name: $jsValue")
 
         return proxy
     }
@@ -967,7 +967,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
         if (!BuildConfig.DEBUG) return
 
         if (!isJsThread()) {
-            Logger.e("checkJsThread() - FAILED!")
+            Logger.e(message = "checkJsThread() - FAILED!")
             throw InternalError(Throwable("Unexpected call: should be in the JsThread but is in ${Thread.currentThread().name}"))
                 .also(::notifyErrorListeners)
         }
@@ -1045,7 +1045,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
         private fun callJsMethodWithoutRetVal(method: JavaMethod, args: Array<Any?>?) {
             runInJsThread {
                 try {
-                    Logger.v("Calling (void) JS method ${type.canonicalName}/$jsValue.${method.name}...")
+                    Logger.v(message = "Calling (void) JS method ${type.canonicalName}/$jsValue.${method.name}...")
                     callJsMethod(jsValue.associatedJsName, method, args ?: arrayOf(), false)
                 } catch (t: Throwable) {
                     throw NativeToJsCallError("${type.canonicalName}/$jsValue.${method.name}", t)
@@ -1057,7 +1057,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
         private fun callJsMethodSuspended(method: JavaMethod, args: Array<Any?>, continuation: Continuation<Any?>): Any {
             launch {
                 val retVal = try {
-                    Logger.v("Calling (suspend) JS method ${type.canonicalName}/$jsValue.${method.name}...")
+                    Logger.v(message = "Calling (suspend) JS method ${type.canonicalName}/$jsValue.${method.name}...")
                     callJsMethod(jsValue.associatedJsName, method, args, true)
                 } catch (t: Throwable) {
                     // Throw JS exception (which must be directly caught by the caller)
@@ -1086,7 +1086,7 @@ constructor(config: JsBridgeConfig): CoroutineScope {
 
             launch {
                 val retVal = try {
-                    Logger.v("Calling (deferred) JS method ${type.canonicalName}/$jsValue.${method.name}...")
+                    Logger.v(message = "Calling (deferred) JS method ${type.canonicalName}/$jsValue.${method.name}...")
                     callJsMethod(jsValue.associatedJsName, method, args ?: arrayOf(), false)
                 } catch (t: Throwable) {
                     // Reject the deferred with the JS exception (which must be directly caught by the caller)
@@ -1111,9 +1111,9 @@ constructor(config: JsBridgeConfig): CoroutineScope {
 
         private fun callJsMethodBlocking(method: JavaMethod, args: Array<Any?>?): Any? {
             if (isMainThread()) {
-                Logger.w("WARNING: executing JS method ${type.canonicalName}/$jsValue.${method.name} in the main thread! Consider using a Deferred or calling the method in another thread!")
+                Logger.w(message = "WARNING: executing JS method ${type.canonicalName}/$jsValue.${method.name} in the main thread! Consider using a Deferred or calling the method in another thread!")
             } else {
-                Logger.v("Calling (blocking) JS method ${type.canonicalName}/$jsValue.${method.name}...")
+                Logger.v(message = "Calling (blocking) JS method ${type.canonicalName}/$jsValue.${method.name}...")
             }
 
             return runBlocking(coroutineContext) {

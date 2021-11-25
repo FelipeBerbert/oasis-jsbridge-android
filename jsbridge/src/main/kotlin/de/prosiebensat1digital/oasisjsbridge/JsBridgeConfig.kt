@@ -47,7 +47,14 @@ private constructor() {
         var enabled: Boolean = false
         var mode: Mode = Mode.AsString
         var appendMessage: (priority: Int, message: String) -> Unit = { priority, message ->
-            Log.println(priority, "JavaScript", message)
+            when (priority) {
+                Log.DEBUG -> Logger.d("JavaScript", message)
+                Log.ERROR -> Logger.e("JavaScript", message)
+                Log.INFO -> Logger.i("JavaScript", message)
+                Log.VERBOSE -> Logger.v("JavaScript", message)
+                Log.WARN -> Logger.w("JavaScript", message)
+                Log.ASSERT -> Logger.wtf("JavaScript", message)
+            }
         }
     }
 
