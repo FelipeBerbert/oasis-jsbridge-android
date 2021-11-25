@@ -2,6 +2,10 @@ package de.prosiebensat1digital.oasisjsbridge
 
 import android.util.Log
 
+/**
+ * Interface for implementing custom loggers, if no custom logger is set in [Logger.jsBridgeLogger]
+ * it will default to [android.util.Log]
+ */
 interface LoggerInterface {
     fun i(tag: String?, message: String)
     fun w(tag: String?, message: String)

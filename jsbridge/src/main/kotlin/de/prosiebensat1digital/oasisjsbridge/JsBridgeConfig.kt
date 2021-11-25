@@ -18,6 +18,14 @@ private constructor() {
         }
     }
 
+    /**
+     * Pseudo builder function.
+     */
+    fun withLogger(loggerImpl: LoggerInterface): JsBridgeConfig {
+        loggerImpl.let { Logger.jsBridgeLogger = it }
+        return this
+    }
+
     val setTimeoutConfig = SetTimeoutExtensionConfig()
     val xhrConfig = XMLHttpRequestConfig()
     val promiseConfig = PromiseConfig()
