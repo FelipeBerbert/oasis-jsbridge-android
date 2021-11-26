@@ -23,8 +23,8 @@ package de.prosiebensat1digital.oasisjsbridge
 class JsException(val jsonValue: String? = null, detailedMessage: String, jsStackTrace: String?, cause: Throwable?) : RuntimeException(detailedMessage, cause) {
 
     init {
-        Logger.v("JsException() - detailedMessage = $detailedMessage")
-        Logger.v("JsException() - jsStackTrace = $jsStackTrace")
+        Logger.v(message = "JsException() - detailedMessage = $detailedMessage")
+        Logger.v(message = "JsException() - jsStackTrace = $jsStackTrace")
 
         // Parses `StackTraceElement`s from `jsStackTrace` and prepend them to the Java stack trace
         stackTrace = jsStackTrace.orEmpty().split('\n')

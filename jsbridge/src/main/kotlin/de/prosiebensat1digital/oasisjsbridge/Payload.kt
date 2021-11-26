@@ -38,7 +38,7 @@ interface Payload {
                     else -> null
                 }
             } catch (e: Exception) {
-                Logger.w("WARNING: invalid JSON: $jsonString")
+                Logger.w(message = "WARNING: invalid JSON: $jsonString")
                 if (BuildConfig.DEBUG) {
                     throw e
                 }
@@ -113,7 +113,7 @@ internal fun jsonValueToPayloadValue(jsonValue: Any?): Any? = when (jsonValue) {
     is JSONObject -> PayloadObject.fromJsonObject(jsonValue)
     is JSONArray -> PayloadArray.fromJsonArray(jsonValue)
     else -> {
-        Logger.w("WARNING: unsupported JSONObject value: $jsonValue!")
+        Logger.w(message = "WARNING: unsupported JSONObject value: $jsonValue!")
         null
     }
 }

@@ -81,7 +81,7 @@ internal class SetTimeoutExtension(private val jsBridge: JsBridge) {
                 delay(msecs)
 
                 if (!activeTimers.contains(id)) {
-                    Logger.d("setTimeoutHelper($msecs, $repeat) - id = $id - callback not executed because the timeout was cancelled!")
+                    Logger.d(message = "setTimeoutHelper($msecs, $repeat) - id = $id - callback not executed because the timeout was cancelled!")
                     return@launch
                 }
                 if (!repeat) {
@@ -91,7 +91,7 @@ internal class SetTimeoutExtension(private val jsBridge: JsBridge) {
                     cb()
                     jsBridge.processPromiseQueue()
                 } catch (t: Throwable) {
-                    Logger.e("Error while calling setTimeout JS callback: $t")
+                    Logger.e(message = "Error while calling setTimeout JS callback: $t")
                     jsBridge.notifyErrorListeners(JsBridgeError.JsCallbackError(t))
                 }
             } while (repeat)

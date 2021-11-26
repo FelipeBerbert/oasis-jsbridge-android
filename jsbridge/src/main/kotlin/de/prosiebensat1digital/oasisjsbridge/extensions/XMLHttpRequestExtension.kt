@@ -52,7 +52,7 @@ internal class XMLHttpRequestExtension(
         data: String?,
         cb: (JsonObjectWrapper, String, String) -> Unit
     ) {
-        Logger.v("nativeSend($httpMethod, $url, $headers)")
+        Logger.v(message = "nativeSend($httpMethod, $url, $headers)")
 
         jsBridge.launch(Dispatchers.IO) {
             // Load URL and evaluate JS string
@@ -78,7 +78,7 @@ internal class XMLHttpRequestExtension(
                         if (key != null && value != null) {
                             requestHeadersBuilder.add(key, value)
                         } else {
-                            Logger.w("Invalid header keyValue: $keyValue")
+                            Logger.w(message = "Invalid header keyValue: $keyValue")
                         }
                     }
                 }
@@ -104,7 +104,7 @@ internal class XMLHttpRequestExtension(
                     }
                 }
 
-                Logger.d("Performing XHR request (query: $url)...")
+                Logger.d(message = "Performing XHR request (query: $url)...")
 
                 // Send request via OkHttp
                 lateinit var request: Request
@@ -137,14 +137,14 @@ internal class XMLHttpRequestExtension(
                 )
                 responseText = response.body?.string()
 
-                Logger.d("Successfully fetched XHR response (query: $url)")
-                Logger.v("-> responseInfo = $responseInfo")
-                Logger.v("-> request headers = $requestHeaders")
+                Logger.d(message = "Successfully fetched XHR response (query: $url)")
+                Logger.v(message = "-> responseInfo = $responseInfo")
+                Logger.v(message = "-> request headers = $requestHeaders")
             } catch (e: SocketTimeoutException) {
-                Logger.d("XHR timeout ($httpMethod $url): $e")
+                Logger.d(message = "XHR timeout ($httpMethod $url): $e")
                 errorString = "timeout"
             } catch (t: Throwable) {
-                Logger.d("XHR error ($httpMethod $url): $t")
+                Logger.d(message = "XHR error ($httpMethod $url): $t")
                 errorString = t.message ?: "unknown XHR error"
             }
 

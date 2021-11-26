@@ -77,7 +77,7 @@ class PayloadObject: Payload {
                 if (BuildConfig.DEBUG) {
                     throw e
                 }
-                Logger.w("WARNING: invalid JSON: $jsonString")
+                Logger.w(message = "WARNING: invalid JSON: $jsonString")
                 null
             }
         }

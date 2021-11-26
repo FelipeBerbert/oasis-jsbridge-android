@@ -110,16 +110,17 @@ class JsBridgeTest {
         @JvmStatic
         fun setUpClass() {
             Logger.jsBridgeLogger = object : LoggerInterface {
-                override fun i(tag: String?, message: String) { Log.i("JsBridgeTest", message) }
-                override fun w(tag: String?, message: String) { Log.w("JsBridgeTest", message) }
-                override fun w(tag: String?, throwable: Throwable) { Log.w("JsBridgeTest", throwable) }
-                override fun w(tag: String?, message: String, throwable: Throwable) { Log.w("JsBridgeTest", message) }
-                override fun d(tag: String?, message: String) { Log.d("JsBridgeTest", message) }
-                override fun e(tag: String?, message: String) { Log.e("JsBridgeTest", message) }
-                override fun e(tag: String?, throwable: Throwable) { Log.e("JsBridgeTest", Log.getStackTraceString(throwable)) }
-                override fun e(tag: String?, message: String, throwable: Throwable) { Log.e("JsBridgeTest", message, throwable) }
-                override fun v(tag: String?, message: String) { Log.v("JsBridgeTest", message) }
-                override fun wtf(tag: String?, message: String) { Log.wtf("JsBridgeTest", message) }
+
+                override fun log(priority: Int, tag: String?, message: String, throwable: Throwable?) {
+                    when (priority) {
+                        Log.VERBOSE -> Log.v("JsBridgeTest", message)
+                        Log.DEBUG -> Log.d("JsBridgeTest", message)
+                        Log.INFO -> Log.i("JsBridgeTest", message)
+                        Log.WARN -> Log.w("JsBridgeTest", message, throwable)
+                        Log.ERROR -> Log.e("JsBridgeTest", message, throwable)
+                        Log.ASSERT -> Log.wtf("JsBridgeTest", message)
+                    }
+                }
             }
         }
     }

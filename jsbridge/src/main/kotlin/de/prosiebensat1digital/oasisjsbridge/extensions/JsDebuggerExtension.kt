@@ -69,12 +69,12 @@ internal class JsDebuggerExtension(
     }
 
     internal fun onDebuggerPending() {
-        Logger.v("onDebuggerPending")
+        Logger.v(message = "onDebuggerPending")
 
         val activity = this.activityRef.get() ?: return
 
         jsBridge.launch(Dispatchers.Main) {
-            Logger.v("onDebuggerPending - launch")
+            Logger.v(message = "onDebuggerPending - launch")
 
             val builder = AlertDialog.Builder(activity)
 
@@ -98,13 +98,13 @@ internal class JsDebuggerExtension(
             """.trimMargin())
                 .setTitle("Waiting for debugger")
                 .setNegativeButton("Stop debugging") { _, _ ->
-                    Logger.i("Cancelling debugging...")
+                    Logger.i(message = "Cancelling debugging...")
                     jsBridge.cancelDebug()
                     debuggerDialog?.cancel()
                     debuggerDialog = null
                 }
 
-            Logger.v("onDebuggerPending - show dialog")
+            Logger.v(message = "onDebuggerPending - show dialog")
             debuggerDialog = builder.create()
             debuggerDialog?.show()
         }
